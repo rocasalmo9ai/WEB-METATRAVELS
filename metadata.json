@@ -1,0 +1,8 @@
+{
+  "name": "Meta Travels | Ultra-Luxury Travel Designer",
+  "description": "Meta Travels redefine el viaje de lujo mediante IA emocional y diseño artesanal. Experiencias exclusivas, destinos secretos y concierge elite 24/7.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "keywords": "viajes de lujo, experiencias a medida, luxury travel, safari elite, concierge IA, viajes personalizados, ultra-luxury journeys"
+}
