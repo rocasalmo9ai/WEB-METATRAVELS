@@ -1,0 +1,12 @@
+/* Base reset */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: #0b0d10; /* negro elegante */
+  color: #ffffff;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* Prevent layout overflow issues */
+img, video { max-width: 100%; height: auto; }
