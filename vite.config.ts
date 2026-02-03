@@ -6,7 +6,10 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
-    minify: 'terser',
+
+    // Vite usa esbuild por defecto. Esto evita depender de "terser".
+    minify: 'esbuild',
+
     rollupOptions: {
       output: {
         manualChunks: {
@@ -15,11 +18,9 @@ export default defineConfig({
       },
     },
   },
+
   server: {
     port: 3000,
     strictPort: true,
-  },
-  define: {
-    'process.env.API_KEY': JSON.stringify(process.env.API_KEY),
   },
 });
