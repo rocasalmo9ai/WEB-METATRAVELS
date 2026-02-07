@@ -10,3 +10,21 @@ body {
 
 /* Prevent layout overflow issues */
 img, video { max-width: 100%; height: auto; }
+html, body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-top {
+  padding-top: calc(var(--safe-top) + 12px);
+}
+
+.safe-bottom {
+  padding-bottom: calc(var(--safe-bottom) + 20px);
+}
