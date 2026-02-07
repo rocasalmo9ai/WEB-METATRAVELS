@@ -48,7 +48,7 @@ export const WeatherWidget: React.FC = () => {
   const [error, setError] = useState('');
   const [isEstimated, setIsEstimated] = useState(false);
 
-  // Mobile date picker fix (iPhone): open date input inside a modal
+  // Mobile date picker: modal
   const [isMobile, setIsMobile] = useState(false);
   const [dateModal, setDateModal] = useState<DateModalType>(null);
 
@@ -57,12 +57,11 @@ export const WeatherWidget: React.FC = () => {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const mq = window.matchMedia('(max-width: 639px)'); // Tailwind sm breakpoint
+    const mq = window.matchMedia('(max-width: 639px)');
     const update = () => setIsMobile(mq.matches);
 
     update();
 
-    // Safari iOS support
     if (mq.addEventListener) {
       mq.addEventListener('change', update);
       return () => mq.removeEventListener('change', update);
@@ -225,7 +224,7 @@ export const WeatherWidget: React.FC = () => {
       case 'drizzle':
         return <CloudRain className="text-blue-300 w-12 h-12 sm:w-20 sm:h-20 shrink-0" />;
       case 'rain':
-        return <CloudRain className="text-blue-500 w-12 h-12 sm:w-20 sm:h-20 shrink-0" />;
+        return <CloudRain tell className="text-blue-500 w-12 h-12 sm:w-20 sm:h-20 shrink-0" />;
       case 'thunder':
         return <CloudLightning className="text-purple-600 w-12 h-12 sm:w-20 sm:h-20 shrink-0" />;
       case 'windy':
@@ -242,9 +241,26 @@ export const WeatherWidget: React.FC = () => {
     setDateModal(type);
   };
 
+  // ✅ NEW: one-tap flow (no extra OK)
   const onModalDateChange = (val: string) => {
-    if (dateModal === 'start') setStartDate(val);
-    if (dateModal === 'end') setEndDate(val);
+    if (!dateModal) return;
+
+    if (dateModal === 'start') {
+      setStartDate(val);
+
+      // if end is empty or becomes invalid, align it (prevents errors)
+      if (!endDate || (endDate && val && val > endDate)) {
+        setEndDate(val);
+      }
+
+      // auto-advance to end date selection
+      setDateModal('end');
+      return;
+    }
+
+    // dateModal === 'end'
+    setEndDate(val);
+    setDateModal(null);
   };
 
   const modalValue = dateModal === 'start' ? startDate : endDate;
@@ -260,9 +276,7 @@ export const WeatherWidget: React.FC = () => {
           <h2 className="text-3xl sm:text-6xl font-bold mb-4 sm:mb-6 font-serif tracking-tight text-white drop-shadow-2xl">
             {t.weather.title}
           </h2>
-          <p className="text-neutral-500 text-base sm:text-xl font-light max-w-3xl leading-relaxed">
-            {t.weather.subtitle}
-          </p>
+          <p className="text-neutral-500 text-base sm:text-xl font-light max-w-3xl leading-relaxed">{t.weather.subtitle}</p>
         </div>
 
         <div className="p-6 sm:p-10 md:p-16 lg:p-20">
@@ -597,10 +611,11 @@ export const WeatherWidget: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Date Modal (✅ FIX: safe-area left/right/bottom) */}
+      {/* Mobile Date Modal (no OK; one selection advances/closes) */}
       {dateModal && (
         <div
           className="fixed inset-0 z-[220] flex items-end justify-center bg-black/80"
+          onClick={() => setDateModal(null)}
           style={{
             paddingLeft: 'calc(1rem + env(safe-area-inset-left))',
             paddingRight: 'calc(1rem + env(safe-area-inset-right))',
@@ -608,7 +623,10 @@ export const WeatherWidget: React.FC = () => {
             paddingTop: '1rem',
           }}
         >
-          <div className="w-full max-w-md mx-auto rounded-[2rem] bg-neutral-900 border border-white/10 shadow-[0_30px_120px_rgba(0,0,0,0.9)] overflow-hidden">
+          <div
+            className="w-full max-w-md mx-auto rounded-[2rem] bg-neutral-900 border border-white/10 shadow-[0_30px_120px_rgba(0,0,0,0.9)] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
               <div className="text-white font-bold tracking-tight">
                 {dateModal === 'start' ? t.weather.startDate : t.weather.endDate}
@@ -623,7 +641,7 @@ export const WeatherWidget: React.FC = () => {
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-6 pb-[calc(1.5rem+var(--safe-bottom))] space-y-3">
               <input
                 type="date"
                 className="w-full px-6 py-5 bg-neutral-950/60 text-white rounded-2xl focus:ring-2 focus:ring-primary/50 outline-none border border-white/10 transition-all font-medium [color-scheme:dark] text-base"
@@ -632,13 +650,15 @@ export const WeatherWidget: React.FC = () => {
                 onChange={(e) => onModalDateChange(e.target.value)}
               />
 
-              <button
-                type="button"
-                onClick={() => setDateModal(null)}
-                className="w-full bg-accent hover:bg-accent-hover text-white py-4 rounded-2xl font-black uppercase tracking-[0.25em] text-xs border border-accent/20 active:scale-95 transition"
-              >
-                OK
-              </button>
+              <p className="text-[11px] text-neutral-500 leading-relaxed">
+                {dateModal === 'start'
+                  ? language === 'es'
+                    ? 'Al elegir la salida, pasarás automáticamente a la fecha de regreso.'
+                    : 'After selecting departure, you will automatically choose the return date.'
+                  : language === 'es'
+                    ? 'Al elegir el regreso se cierra automáticamente.'
+                    : 'After selecting return date, it closes automatically.'}
+              </p>
             </div>
           </div>
         </div>
