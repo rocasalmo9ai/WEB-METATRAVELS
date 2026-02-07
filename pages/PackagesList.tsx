@@ -1,53 +1,65 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { PACKAGES } from '../constants';
-import { Filter, Search, Calendar, CheckCircle2, ArrowRight, Plane, Hotel, Map, User, Utensils, Coins, TicketCheck, Globe } from 'lucide-react';
+import {
+  Search,
+  Calendar,
+  CheckCircle2,
+  ArrowRight,
+  Plane,
+  Hotel,
+  Map,
+  User,
+  Utensils,
+  Coins,
+  TicketCheck,
+  Globe,
+} from 'lucide-react';
 import { useLanguage } from '../components/LanguageContext';
 import { Package } from '../types';
 
 export const PackagesList: React.FC = () => {
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState<'all' | string>('all');
   const { t, getText } = useLanguage();
 
   const filteredPackages = useMemo(() => {
-    const base = filter === 'all'
-      ? PACKAGES
-      : PACKAGES.filter(p =>
-          p.type === filter ||
-          p.level === filter ||
-          (filter === 'Safari' && p.type === 'Safari') ||
-          (filter === 'Playa' && p.type === 'Playa') ||
-          (filter === 'Cultura' && p.type === 'Cultura') ||
-          (filter === 'Crucero' && p.type === 'Crucero') ||
-          (filter === 'Lujo' && p.level === 'Lujo')
-        );
+    const base =
+      filter === 'all'
+        ? PACKAGES
+        : PACKAGES.filter(
+            (p) =>
+              p.type === filter ||
+              p.level === filter ||
+              (filter === 'Safari' && p.type === 'Safari') ||
+              (filter === 'Playa' && p.type === 'Playa') ||
+              (filter === 'Cultura' && p.type === 'Cultura') ||
+              (filter === 'Crucero' && p.type === 'Crucero') ||
+              (filter === 'Lujo' && p.level === 'Lujo')
+          );
 
-    // Para propósitos de demo y completar el grid (mínimo 9 tarjetas)
-    let displayList = [...base];
-    if (displayList.length > 0) {
-      while (displayList.length < 9) {
-        displayList = [
-          ...displayList,
-          ...base.map((p, i) => ({
-            ...p,
-            id: `${p.id}-dup-${displayList.length + i}`,
-          })),
-        ];
-      }
+    let display = [...base];
+    while (display.length > 0 && display.length < 9) {
+      display = display.concat(
+        base.map((p, i) => ({
+          ...p,
+          id: `${p.id}-dup-${display.length + i}`,
+        }))
+      );
     }
-    return displayList.slice(0, 9);
+
+    return display.slice(0, 9);
   }, [filter]);
 
   const AmenitiesRow = ({ pkg }: { pkg: Package }) => (
     <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-gray-100">
-      {pkg.amenities.flightsIntl && <Globe size={16} className="text-gray-400 hover:text-accent transition-colors" />}
-      {pkg.amenities.flightsDomestic && <Plane size={16} className="text-gray-400 hover:text-accent transition-colors" />}
-      {pkg.amenities.accommodation && <Hotel size={16} className="text-gray-400 hover:text-accent transition-colors" />}
-      {pkg.amenities.meals && <Utensils size={16} className="text-gray-400 hover:text-accent transition-colors" />}
-      {pkg.amenities.tours && <Map size={16} className="text-gray-400 hover:text-accent transition-colors" />}
-      {pkg.amenities.guide && <User size={16} className="text-gray-400 hover:text-accent transition-colors" />}
-      {pkg.amenities.tips && <Coins size={16} className="text-gray-400 hover:text-accent transition-colors" />}
-      {pkg.amenities.taxes && <TicketCheck size={16} className="text-gray-400 hover:text-accent transition-colors" />}
+      {pkg.amenities.flightsIntl && <Globe size={16} className="text-gray-400" />}
+      {pkg.amenities.flightsDomestic && <Plane size={16} className="text-gray-400" />}
+      {pkg.amenities.accommodation && <Hotel size={16} className="text-gray-400" />}
+      {pkg.amenities.meals && <Utensils size={16} className="text-gray-400" />}
+      {pkg.amenities.tours && <Map size={16} className="text-gray-400" />}
+      {pkg.amenities.guide && <User size={16} className="text-gray-400" />}
+      {pkg.amenities.tips && <Coins size={16} className="text-gray-400" />}
+      {pkg.amenities.taxes && <TicketCheck size={16} className="text-gray-400" />}
     </div>
   );
 
@@ -61,20 +73,20 @@ export const PackagesList: React.FC = () => {
   ];
 
   return (
-    <div className="bg-gray-50 min-h-screen pt-32 md:pt-48 pb-24 animate-fade-in">
+    <div className="bg-gray-50 min-h-screen pt-32 md:pt-48 pb-24">
       <div className="container mx-auto px-6">
-        {/* Title Section con offset seguro para el header */}
+        {/* Título */}
         <div className="text-center mb-16">
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 font-serif tracking-tight drop-shadow-sm">
+          <h1 className="text-5xl md:text-6xl font-serif font-bold text-gray-900 mb-6">
             {t.nav.destinations}
           </h1>
-          <p className="text-xl text-gray-500 max-w-2xl mx-auto font-light leading-relaxed">
+          <p className="text-xl text-gray-500 max-w-2xl mx-auto">
             {t.home.featuredPackages}
           </p>
         </div>
 
-        {/* Filters - Separación reforzada */}
-        <div className="flex flex-wrap justify-center gap-4 mb-20 relative z-20">
+        {/* FILTROS (FIX DEFINITIVO) */}
+        <div className="flex flex-wrap justify-center gap-4 mb-20">
           {filters.map((f) => {
             const isActive = filter === f.id;
 
@@ -83,13 +95,12 @@ export const PackagesList: React.FC = () => {
                 key={f.id}
                 onClick={() => setFilter(f.id)}
                 className={[
-                  'px-8 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 border shadow-sm',
-                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-50',
+                  'px-8 py-3 rounded-full text-xs font-bold uppercase tracking-widest border transition-all',
                   isActive
-                    // ACTIVO: fondo claro + texto oscuro (para que NO se pierda)
-                    ? 'bg-white border-primary text-primary ring-2 ring-primary/20 shadow-primary/10 scale-105'
-                    // INACTIVO
-                    : 'bg-white border-gray-200 text-gray-600 hover:border-primary/50 hover:text-primary',
+                    // 👇 ACTIVO: oscuro + texto blanco (NO se pierde jamás)
+                    ? 'bg-neutral-900 border-neutral-900 text-white shadow-lg scale-105'
+                    // 👇 INACTIVO
+                    : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-100',
                 ].join(' ')}
               >
                 {f.label}
@@ -98,69 +109,54 @@ export const PackagesList: React.FC = () => {
           })}
         </div>
 
-        {/* Grid de Viajes */}
+        {/* GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
           {filteredPackages.map((pkg) => (
-            <Link to={`/package/${pkg.id}`} key={pkg.id} className="group block h-full">
-              <div className="relative overflow-hidden rounded-[2.5rem] shadow-xl bg-white flex flex-col h-full hover:shadow-2xl transition-all duration-500 border border-gray-100">
-                {/* Image Container */}
-                <div className="relative aspect-[4/3] overflow-hidden shrink-0">
+            <Link to={`/package/${pkg.id}`} key={pkg.id} className="group block">
+              <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-xl border border-gray-100 flex flex-col h-full">
+                <div className="relative aspect-[4/3]">
                   <img
                     src={pkg.heroImage}
                     alt={getText(pkg.title)}
-                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 brightness-95"
+                    className="w-full h-full object-cover"
                   />
-                  <div className="absolute top-6 right-6 bg-black/70 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] text-white border border-white/10">
-                    {pkg.type}
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 </div>
 
-                {/* Content Area */}
                 <div className="p-8 flex flex-col flex-grow">
-                  <p className="text-accent text-[10px] font-bold uppercase mb-3 tracking-[0.3em]">
+                  <p className="text-xs uppercase tracking-widest text-gray-400 mb-2">
                     {getText(pkg.destination)}
                   </p>
-                  <h3 className="text-2xl font-bold mb-4 leading-tight text-gray-900 font-serif group-hover:text-primary transition-colors">
+
+                  <h3 className="text-2xl font-serif font-bold text-gray-900 mb-4">
                     {getText(pkg.title)}
                   </h3>
 
-                  {/* Dates/Info Bar */}
-                  <div className="flex items-center text-[10px] text-gray-400 mb-6 bg-gray-50/80 px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border border-gray-100">
-                    <Calendar size={14} className="mr-3 text-primary shrink-0" /> {getText(pkg.dates)}
+                  <div className="flex items-center text-xs text-gray-500 mb-6">
+                    <Calendar size={14} className="mr-2" />
+                    {getText(pkg.dates)}
                   </div>
 
-                  {/* Highlights List */}
-                  <div className="mb-6 flex-grow">
-                    <p className="text-[9px] text-gray-300 uppercase mb-4 font-bold tracking-[0.2em]">
-                      {t.common.highlights}
-                    </p>
-                    <ul className="space-y-3">
-                      {pkg.highlights.slice(0, 2).map((h, i) => (
-                        <li key={i} className="flex items-start text-sm text-gray-600 font-light leading-snug">
-                          <CheckCircle2 size={14} className="text-accent mr-3 mt-0.5 shrink-0" />
-                          <span className="line-clamp-2">{getText(h)}</span>
-                        </li>
-                      ))}
-                    </ul>
+                  <div className="flex-grow">
+                    {pkg.highlights.slice(0, 2).map((h, i) => (
+                      <div key={i} className="flex text-sm text-gray-600 mb-2">
+                        <CheckCircle2 size={14} className="mr-2 text-green-600" />
+                        {getText(h)}
+                      </div>
+                    ))}
                   </div>
 
-                  {/* Amenities Section */}
                   <AmenitiesRow pkg={pkg} />
 
-                  {/* Footer Info */}
-                  <div className="flex justify-between items-end border-t border-gray-100 pt-6 mt-6">
+                  <div className="mt-6 flex justify-between items-center border-t pt-4">
                     <div>
-                      <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">
+                      <p className="text-xs text-gray-400 uppercase">
                         {t.common.perPerson}
                       </p>
-                      <p className="text-2xl font-bold text-gray-900 tracking-tighter">
-                        ${pkg.price.toLocaleString()} <span className="text-xs font-medium text-gray-400">{pkg.currency}</span>
+                      <p className="text-2xl font-bold text-gray-900">
+                        ${pkg.price.toLocaleString()}
                       </p>
                     </div>
-                    <div className="bg-primary/10 text-primary p-3 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all duration-300 transform group-hover:rotate-12">
-                      <ArrowRight size={20} />
-                    </div>
+                    <ArrowRight className="text-gray-400 group-hover:text-black transition-colors" />
                   </div>
                 </div>
               </div>
@@ -168,14 +164,12 @@ export const PackagesList: React.FC = () => {
           ))}
         </div>
 
-        {/* Empty State Fallback */}
         {filteredPackages.length === 0 && (
           <div className="text-center py-40">
-            <div className="bg-gray-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8 text-gray-300">
-              <Search size={40} />
-            </div>
-            <h3 className="text-2xl font-serif text-gray-800 mb-2">No se encontraron viajes</h3>
-            <p className="text-gray-500">Intenta con otro filtro de nuestra colección.</p>
+            <Search size={40} className="mx-auto text-gray-300 mb-6" />
+            <h3 className="text-2xl font-serif text-gray-800">
+              No se encontraron viajes
+            </h3>
           </div>
         )}
       </div>
