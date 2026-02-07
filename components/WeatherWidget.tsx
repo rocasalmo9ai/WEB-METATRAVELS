@@ -48,7 +48,7 @@ export const WeatherWidget: React.FC = () => {
   const [error, setError] = useState('');
   const [isEstimated, setIsEstimated] = useState(false);
 
-  // Mobile date picker: modal
+  // Mobile date picker fix (iPhone): open date input inside a modal
   const [isMobile, setIsMobile] = useState(false);
   const [dateModal, setDateModal] = useState<DateModalType>(null);
 
@@ -57,11 +57,12 @@ export const WeatherWidget: React.FC = () => {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const mq = window.matchMedia('(max-width: 639px)');
+    const mq = window.matchMedia('(max-width: 639px)'); // Tailwind sm breakpoint
     const update = () => setIsMobile(mq.matches);
 
     update();
 
+    // Safari iOS support
     if (mq.addEventListener) {
       mq.addEventListener('change', update);
       return () => mq.removeEventListener('change', update);
@@ -224,7 +225,7 @@ export const WeatherWidget: React.FC = () => {
       case 'drizzle':
         return <CloudRain className="text-blue-300 w-12 h-12 sm:w-20 sm:h-20 shrink-0" />;
       case 'rain':
-        return <CloudRain tell className="text-blue-500 w-12 h-12 sm:w-20 sm:h-20 shrink-0" />;
+        return <CloudRain className="text-blue-500 w-12 h-12 sm:w-20 sm:h-20 shrink-0" />;
       case 'thunder':
         return <CloudLightning className="text-purple-600 w-12 h-12 sm:w-20 sm:h-20 shrink-0" />;
       case 'windy':
@@ -241,26 +242,24 @@ export const WeatherWidget: React.FC = () => {
     setDateModal(type);
   };
 
-  // ✅ NEW: one-tap flow (no extra OK)
-  const onModalDateChange = (val: string) => {
+  // ✅ Nuevo flujo: seleccionar fecha => cierra modal (y si era salida, abre regreso automáticamente)
+  const onModalDatePicked = (val: string) => {
     if (!dateModal) return;
 
     if (dateModal === 'start') {
       setStartDate(val);
+      // si no hay endDate o queda inválida, la alineamos
+      if (endDate && val > endDate) setEndDate(val);
 
-      // if end is empty or becomes invalid, align it (prevents errors)
-      if (!endDate || (endDate && val && val > endDate)) {
-        setEndDate(val);
-      }
-
-      // auto-advance to end date selection
-      setDateModal('end');
+      // abre regreso automáticamente
+      window.setTimeout(() => setDateModal('end'), 150);
       return;
     }
 
-    // dateModal === 'end'
-    setEndDate(val);
-    setDateModal(null);
+    if (dateModal === 'end') {
+      setEndDate(val);
+      window.setTimeout(() => setDateModal(null), 150);
+    }
   };
 
   const modalValue = dateModal === 'start' ? startDate : endDate;
@@ -276,7 +275,9 @@ export const WeatherWidget: React.FC = () => {
           <h2 className="text-3xl sm:text-6xl font-bold mb-4 sm:mb-6 font-serif tracking-tight text-white drop-shadow-2xl">
             {t.weather.title}
           </h2>
-          <p className="text-neutral-500 text-base sm:text-xl font-light max-w-3xl leading-relaxed">{t.weather.subtitle}</p>
+          <p className="text-neutral-500 text-base sm:text-xl font-light max-w-3xl leading-relaxed">
+            {t.weather.subtitle}
+          </p>
         </div>
 
         <div className="p-6 sm:p-10 md:p-16 lg:p-20">
@@ -450,7 +451,7 @@ export const WeatherWidget: React.FC = () => {
                     {language === 'es' ? 'SÍNTESIS ESTRATÉGICA' : 'STRATEGIC SYNTHESIS'}
                   </p>
 
-                  <p className="text-white font-serif text-3xl sm:text-4xl md:text-5xl leading-tight drop-shadow-lg break-words">
+                  <p className="text-white font-serif leading-tight drop-shadow-lg break-words text-[clamp(1.8rem,6vw,3.2rem)]">
                     {weatherAnalysis.summaryText || '--'}
                   </p>
 
@@ -474,7 +475,7 @@ export const WeatherWidget: React.FC = () => {
                 <h3 className="font-serif font-bold text-white tracking-tight leading-[0.95] flex items-start gap-4 sm:gap-6">
                   <MapPin className="w-10 h-10 sm:w-14 sm:h-14 text-primary shrink-0 mt-1" />
                   <span className="min-w-0">
-                    <span className="block text-5xl sm:text-7xl md:text-8xl break-words [overflow-wrap:anywhere]">
+                    <span className="block break-words text-[clamp(2.6rem,10vw,5.75rem)]">
                       {selectedLocation.name}
                     </span>
                     <span className="block text-xl sm:text-3xl text-neutral-600 font-light mt-2 break-words">
@@ -546,7 +547,9 @@ export const WeatherWidget: React.FC = () => {
 
                         <div
                           className={`rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 flex flex-col items-center gap-3 border shadow-inner min-w-0 ${
-                            (day.rainProb || 0) > 40 ? 'bg-primary/20 border-primary/40' : 'bg-neutral-950/40 border-white/5'
+                            (day.rainProb || 0) > 40
+                              ? 'bg-primary/20 border-primary/40'
+                              : 'bg-neutral-950/40 border-white/5'
                           }`}
                         >
                           <CloudRain className={`w-5 h-5 sm:w-6 sm:h-6 ${(day.rainProb || 0) > 40 ? 'text-primary' : 'text-neutral-600'}`} />
@@ -563,10 +566,14 @@ export const WeatherWidget: React.FC = () => {
                         <div className="flex items-center justify-between gap-4 min-w-0">
                           <div className="flex items-center gap-3 min-w-0">
                             <Sun className="w-5 h-5 text-orange-500/40 shrink-0" />
-                            <span className="text-sm text-neutral-300 font-bold tabular-nums tracking-widest truncate">{day.sunrise}</span>
+                            <span className="text-sm text-neutral-300 font-bold tabular-nums tracking-widest truncate">
+                              {day.sunrise}
+                            </span>
                           </div>
                           <div className="flex items-center gap-3 min-w-0">
-                            <span className="text-sm text-neutral-300 font-bold tabular-nums tracking-widest truncate">{day.sunset}</span>
+                            <span className="text-sm text-neutral-300 font-bold tabular-nums tracking-widest truncate">
+                              {day.sunset}
+                            </span>
                             <Cloud className="w-5 h-5 text-primary/40 shrink-0" />
                           </div>
                         </div>
@@ -592,7 +599,7 @@ export const WeatherWidget: React.FC = () => {
                               {t.weather.intel}
                             </span>
                           </div>
-                          <p className="text-sm sm:text-base text-neutral-300 italic font-light leading-relaxed break-words [overflow-wrap:anywhere]">
+                          <p className="text-sm sm:text-base text-neutral-300 italic font-light leading-relaxed break-words">
                             {getTravelTip(day)}
                           </p>
                         </div>
@@ -611,22 +618,10 @@ export const WeatherWidget: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Date Modal (no OK; one selection advances/closes) */}
+      {/* ✅ Mobile Date Modal (sin OK, sin “salirse”) */}
       {dateModal && (
-        <div
-          className="fixed inset-0 z-[220] flex items-end justify-center bg-black/80"
-          onClick={() => setDateModal(null)}
-          style={{
-            paddingLeft: 'calc(1rem + env(safe-area-inset-left))',
-            paddingRight: 'calc(1rem + env(safe-area-inset-right))',
-            paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))',
-            paddingTop: '1rem',
-          }}
-        >
-          <div
-            className="w-full max-w-md mx-auto rounded-[2rem] bg-neutral-900 border border-white/10 shadow-[0_30px_120px_rgba(0,0,0,0.9)] overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 z-[220] flex items-end justify-center bg-black/80 p-4 overflow-hidden">
+          <div className="w-full max-w-[calc(100vw-2rem)] sm:max-w-md mx-auto box-border rounded-[2rem] bg-neutral-900 border border-white/10 shadow-[0_30px_120px_rgba(0,0,0,0.9)] overflow-hidden">
             <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
               <div className="text-white font-bold tracking-tight">
                 {dateModal === 'start' ? t.weather.startDate : t.weather.endDate}
@@ -641,23 +636,20 @@ export const WeatherWidget: React.FC = () => {
               </button>
             </div>
 
-            <div className="p-6 pb-[calc(1.5rem+var(--safe-bottom))] space-y-3">
+            <div className="p-6 pb-[calc(1.25rem+var(--safe-bottom))]">
               <input
                 type="date"
-                className="w-full px-6 py-5 bg-neutral-950/60 text-white rounded-2xl focus:ring-2 focus:ring-primary/50 outline-none border border-white/10 transition-all font-medium [color-scheme:dark] text-base"
+                className="w-full box-border px-6 py-5 bg-neutral-950/60 text-white rounded-2xl focus:ring-2 focus:ring-primary/50 outline-none border border-white/10 transition-all font-medium [color-scheme:dark] text-base"
                 value={modalValue}
                 min={modalMin}
-                onChange={(e) => onModalDateChange(e.target.value)}
+                onChange={(e) => onModalDatePicked(e.target.value)}
               />
 
-              <p className="text-[11px] text-neutral-500 leading-relaxed">
+              {/* Tip sutil para el usuario */}
+              <p className="mt-4 text-[11px] text-neutral-500 font-bold uppercase tracking-[0.22em]">
                 {dateModal === 'start'
-                  ? language === 'es'
-                    ? 'Al elegir la salida, pasarás automáticamente a la fecha de regreso.'
-                    : 'After selecting departure, you will automatically choose the return date.'
-                  : language === 'es'
-                    ? 'Al elegir el regreso se cierra automáticamente.'
-                    : 'After selecting return date, it closes automatically.'}
+                  ? (language === 'es' ? 'Al elegir salida, se abre regreso.' : 'Selecting start opens end date.')
+                  : (language === 'es' ? 'Listo. Ya puedes consultar.' : 'Done. You can search now.')}
               </p>
             </div>
           </div>
