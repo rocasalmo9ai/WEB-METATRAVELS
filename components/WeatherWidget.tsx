@@ -217,7 +217,6 @@ export const WeatherWidget: React.FC = () => {
       </div>
 
       <div className="p-8 md:p-16 lg:p-24">
-        {/* Formulario de búsqueda optimizado */}
         <div className="flex flex-col gap-12 mb-24 bg-neutral-800/30 p-10 md:p-16 rounded-[3.5rem] border border-white/10 shadow-inner">
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
             <div className="relative z-30">
@@ -260,37 +259,42 @@ export const WeatherWidget: React.FC = () => {
               )}
             </div>
 
-            {/* ✅ FIX MOBILE: fechas en 1 columna, en sm ya vuelven a 2 */}
+            {/* ✅ Fechas: 1 columna en mobile; sm regresa a 2. + iOS hardening */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
               <div className="min-w-0">
                 <label className="block text-[10px] font-black text-neutral-500 uppercase tracking-[0.4em] mb-5 ml-2">
                   {t.weather.startDate}
                 </label>
-                <input
-                  type="date"
-                  className="w-full min-w-0 px-6 sm:px-8 py-5 sm:py-6 bg-neutral-950/40 text-white rounded-3xl focus:ring-2 focus:ring-primary/50 outline-none border border-white/10 transition-all font-medium [color-scheme:dark] text-base sm:text-xl"
-                  value={startDate}
-                  min={today}
-                  onChange={(e) => {
-                    setStartDate(e.target.value);
-                    setError('');
-                  }}
-                />
+                <div className="min-w-0 overflow-hidden rounded-3xl">
+                  <input
+                    type="date"
+                    className="w-full min-w-0 max-w-full px-6 sm:px-8 py-5 sm:py-6 bg-neutral-950/40 text-white rounded-3xl border border-white/10 transition-all font-medium [color-scheme:dark] text-base sm:text-xl outline-none focus:ring-2 focus:ring-primary/50 appearance-none [-webkit-appearance:none] overflow-hidden"
+                    value={startDate}
+                    min={today}
+                    onChange={(e) => {
+                      setStartDate(e.target.value);
+                      setError('');
+                    }}
+                  />
+                </div>
               </div>
+
               <div className="min-w-0">
                 <label className="block text-[10px] font-black text-neutral-500 uppercase tracking-[0.4em] mb-5 ml-2">
                   {t.weather.endDate}
                 </label>
-                <input
-                  type="date"
-                  className="w-full min-w-0 px-6 sm:px-8 py-5 sm:py-6 bg-neutral-950/40 text-white rounded-3xl focus:ring-2 focus:ring-primary/50 outline-none border border-white/10 transition-all font-medium [color-scheme:dark] text-base sm:text-xl"
-                  value={endDate}
-                  min={startDate || today}
-                  onChange={(e) => {
-                    setEndDate(e.target.value);
-                    setError('');
-                  }}
-                />
+                <div className="min-w-0 overflow-hidden rounded-3xl">
+                  <input
+                    type="date"
+                    className="w-full min-w-0 max-w-full px-6 sm:px-8 py-5 sm:py-6 bg-neutral-950/40 text-white rounded-3xl border border-white/10 transition-all font-medium [color-scheme:dark] text-base sm:text-xl outline-none focus:ring-2 focus:ring-primary/50 appearance-none [-webkit-appearance:none] overflow-hidden"
+                    value={endDate}
+                    min={startDate || today}
+                    onChange={(e) => {
+                      setEndDate(e.target.value);
+                      setError('');
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -316,7 +320,6 @@ export const WeatherWidget: React.FC = () => {
 
         {selectedLocation && forecast.length > 0 && weatherAnalysis && (
           <div className="animate-fade-in space-y-32">
-            {/* Análisis del Asesor ampliado */}
             <div className="bg-neutral-800/40 border border-white/10 rounded-[4rem] p-12 md:p-20 flex flex-col lg:flex-row gap-16 items-center justify-between shadow-3xl relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-white/[0.04] to-transparent pointer-events-none"></div>
               <div className="flex items-center gap-10 md:gap-16 relative z-10 w-full lg:w-auto">
@@ -374,7 +377,6 @@ export const WeatherWidget: React.FC = () => {
               </div>
             </div>
 
-            {/* Cabecera de Destino ampliada */}
             <div className="px-6">
               <h3 className="text-6xl sm:text-9xl font-bold text-white flex flex-wrap items-baseline font-serif tracking-tighter leading-none mb-12">
                 <MapPin className="w-16 h-16 mr-8 text-primary shrink-0 self-center" />
@@ -384,7 +386,6 @@ export const WeatherWidget: React.FC = () => {
                 </span>
               </h3>
 
-              {/* ✅ FIX: fechas legibles en una línea por fecha */}
               <div className="flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-12">
                 <p className="text-lg sm:text-xl text-neutral-400 flex items-center tracking-[0.3em] uppercase font-black">
                   <Calendar className="w-8 h-8 mr-5 text-accent shrink-0" />
@@ -403,7 +404,6 @@ export const WeatherWidget: React.FC = () => {
               </div>
             </div>
 
-            {/* Grid de Pronóstico Diario */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-10 md:gap-14 overflow-visible">
               {forecast.map((day, idx) => (
                 <div
@@ -411,7 +411,6 @@ export const WeatherWidget: React.FC = () => {
                   className="bg-neutral-800/40 border border-white/10 rounded-[4rem] hover:border-primary/50 hover:bg-neutral-800/60 transition-all duration-700 flex flex-col group h-full shadow-[0_40px_100px_rgba(0,0,0,0.5)] relative overflow-visible"
                 >
                   <div className="p-12 lg:p-14 flex flex-col h-full gap-12 relative z-10">
-                    {/* Bloque 1 */}
                     <div className="space-y-4 border-b border-white/5 pb-10">
                       <p className="text-[10px] text-neutral-500 font-black uppercase tracking-[0.4em]">
                         {new Date(day.date).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
@@ -426,7 +425,6 @@ export const WeatherWidget: React.FC = () => {
                       </h4>
                     </div>
 
-                    {/* Bloque 2 */}
                     <div className="flex items-center justify-between gap-6 py-6 min-h-[160px] overflow-visible">
                       <div className="shrink-0 transition-all duration-700 group-hover:scale-110 group-hover:rotate-6">
                         {renderIcon(day.condition)}
@@ -441,7 +439,6 @@ export const WeatherWidget: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Bloque 3 */}
                     <div className="grid grid-cols-2 gap-8">
                       <div className="bg-neutral-950/40 rounded-[2.5rem] p-8 flex flex-col items-center gap-4 border border-white/5 shadow-inner transition-all hover:bg-neutral-950/60">
                         <Thermometer className="w-6 h-6 text-neutral-600" />
@@ -463,11 +460,12 @@ export const WeatherWidget: React.FC = () => {
                         <span className="text-[10px] text-neutral-500 uppercase tracking-[0.3em] font-black text-center leading-none">
                           {t.weather.rain}
                         </span>
-                        <span className="text-2xl font-bold text-white tracking-tighter">{Math.round(day.rainProb || 0)}%</span>
+                        <span className="text-2xl font-bold text-white tracking-tighter">
+                          {Math.round(day.rainProb || 0)}%
+                        </span>
                       </div>
                     </div>
 
-                    {/* Bloque 4 */}
                     <div className="space-y-10 pt-10 border-t border-white/5 mt-auto">
                       <div className="flex flex-col gap-8">
                         <div className="flex items-center justify-between px-2">
@@ -498,7 +496,6 @@ export const WeatherWidget: React.FC = () => {
                         )}
                       </div>
 
-                      {/* Recomendación */}
                       <div className="bg-neutral-950/60 p-10 rounded-[2.5rem] border border-white/5 space-y-5 shadow-inner">
                         <div className="flex items-center gap-4">
                           <Shirt className="w-6 h-6 text-accent shrink-0" />
@@ -512,7 +509,6 @@ export const WeatherWidget: React.FC = () => {
               ))}
             </div>
 
-            {/* Aviso legal */}
             <div className="mt-32 bg-neutral-900/60 border border-white/5 p-16 lg:p-24 rounded-[5rem] flex flex-col md:flex-row items-center gap-16 max-w-[1200px] mx-auto text-neutral-500 italic shadow-inner text-center md:text-left">
               <Info className="w-12 h-12 shrink-0 text-primary/30" />
               <p className="text-lg leading-relaxed font-light">{t.weather.disclaimer}</p>
