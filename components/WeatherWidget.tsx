@@ -532,9 +532,7 @@ export const WeatherWidget: React.FC = () => {
 
                         <div
                           className={`rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 flex flex-col items-center gap-3 border shadow-inner min-w-0 ${
-                            (day.rainProb || 0) > 40
-                              ? 'bg-primary/20 border-primary/40'
-                              : 'bg-neutral-950/40 border-white/5'
+                            (day.rainProb || 0) > 40 ? 'bg-primary/20 border-primary/40' : 'bg-neutral-950/40 border-white/5'
                           }`}
                         >
                           <CloudRain className={`w-5 h-5 sm:w-6 sm:h-6 ${(day.rainProb || 0) > 40 ? 'text-primary' : 'text-neutral-600'}`} />
@@ -551,14 +549,10 @@ export const WeatherWidget: React.FC = () => {
                         <div className="flex items-center justify-between gap-4 min-w-0">
                           <div className="flex items-center gap-3 min-w-0">
                             <Sun className="w-5 h-5 text-orange-500/40 shrink-0" />
-                            <span className="text-sm text-neutral-300 font-bold tabular-nums tracking-widest truncate">
-                              {day.sunrise}
-                            </span>
+                            <span className="text-sm text-neutral-300 font-bold tabular-nums tracking-widest truncate">{day.sunrise}</span>
                           </div>
                           <div className="flex items-center gap-3 min-w-0">
-                            <span className="text-sm text-neutral-300 font-bold tabular-nums tracking-widest truncate">
-                              {day.sunset}
-                            </span>
+                            <span className="text-sm text-neutral-300 font-bold tabular-nums tracking-widest truncate">{day.sunset}</span>
                             <Cloud className="w-5 h-5 text-primary/40 shrink-0" />
                           </div>
                         </div>
@@ -603,10 +597,18 @@ export const WeatherWidget: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Date Modal */}
+      {/* Mobile Date Modal (✅ FIX: safe-area left/right/bottom) */}
       {dateModal && (
-        <div className="fixed inset-0 z-[220] flex items-end justify-center bg-black/80 p-4">
-          <div className="w-full max-w-[min(28rem,calc(100vw-2rem))] rounded-[2rem] bg-neutral-900 border border-white/10 shadow-[0_30px_120px_rgba(0,0,0,0.9)] overflow-hidden">
+        <div
+          className="fixed inset-0 z-[220] flex items-end justify-center bg-black/80"
+          style={{
+            paddingLeft: 'calc(1rem + env(safe-area-inset-left))',
+            paddingRight: 'calc(1rem + env(safe-area-inset-right))',
+            paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))',
+            paddingTop: '1rem',
+          }}
+        >
+          <div className="w-full max-w-md mx-auto rounded-[2rem] bg-neutral-900 border border-white/10 shadow-[0_30px_120px_rgba(0,0,0,0.9)] overflow-hidden">
             <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
               <div className="text-white font-bold tracking-tight">
                 {dateModal === 'start' ? t.weather.startDate : t.weather.endDate}
@@ -621,7 +623,7 @@ export const WeatherWidget: React.FC = () => {
               </button>
             </div>
 
-            <div className="p-6 pb-[calc(1.5rem+var(--safe-bottom))] space-y-4">
+            <div className="p-6 space-y-4">
               <input
                 type="date"
                 className="w-full px-6 py-5 bg-neutral-950/60 text-white rounded-2xl focus:ring-2 focus:ring-primary/50 outline-none border border-white/10 transition-all font-medium [color-scheme:dark] text-base"
