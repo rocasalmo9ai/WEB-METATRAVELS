@@ -62,7 +62,6 @@ export const WeatherWidget: React.FC = () => {
 
     update();
 
-    // Safari iOS support
     if (mq.addEventListener) {
       mq.addEventListener('change', update);
       return () => mq.removeEventListener('change', update);
@@ -246,10 +245,7 @@ export const WeatherWidget: React.FC = () => {
   };
 
   const modalValue = dateModal === 'start' ? startDate : endDate;
-  const modalMin =
-    dateModal === 'start'
-      ? today
-      : startDate || today;
+  const modalMin = dateModal === 'start' ? today : startDate || today;
 
   return (
     <>
@@ -307,7 +303,6 @@ export const WeatherWidget: React.FC = () => {
                 )}
               </div>
 
-              {/* ✅ Dates: desktop uses native inputs; mobile uses modal to avoid “picker outside card” */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
                 <div className="min-w-0">
                   <label className="block text-[10px] font-black text-neutral-500 uppercase tracking-[0.4em] mb-5 ml-2">
@@ -331,8 +326,8 @@ export const WeatherWidget: React.FC = () => {
                       onClick={() => openDateModal('start')}
                       className="w-full min-w-0 px-6 py-5 bg-neutral-950/40 text-white rounded-3xl border border-white/10 transition-all text-left flex items-center justify-between"
                     >
-                      <span className="tabular-nums text-base">
-                        {startDate ? startDate : (language === 'es' ? 'Selecciona fecha' : 'Select date')}
+                      <span className="tabular-nums text-base min-w-0 truncate">
+                        {startDate ? startDate : language === 'es' ? 'Selecciona fecha' : 'Select date'}
                       </span>
                       <Calendar className="w-5 h-5 text-neutral-500 shrink-0" />
                     </button>
@@ -361,8 +356,8 @@ export const WeatherWidget: React.FC = () => {
                       onClick={() => openDateModal('end')}
                       className="w-full min-w-0 px-6 py-5 bg-neutral-950/40 text-white rounded-3xl border border-white/10 transition-all text-left flex items-center justify-between"
                     >
-                      <span className="tabular-nums text-base">
-                        {endDate ? endDate : (language === 'es' ? 'Selecciona fecha' : 'Select date')}
+                      <span className="tabular-nums text-base min-w-0 truncate">
+                        {endDate ? endDate : language === 'es' ? 'Selecciona fecha' : 'Select date'}
                       </span>
                       <Calendar className="w-5 h-5 text-neutral-500 shrink-0" />
                     </button>
@@ -386,7 +381,7 @@ export const WeatherWidget: React.FC = () => {
           {error && (
             <div className="mb-20 bg-red-900/20 border border-red-500/30 p-10 rounded-[2.5rem] flex items-center text-red-400 animate-fade-in backdrop-blur-xl shadow-2xl">
               <AlertCircle className="w-8 h-8 mr-6 shrink-0" />
-              <span className="text-lg font-medium">{error}</span>
+              <span className="text-lg font-medium break-words [overflow-wrap:anywhere]">{error}</span>
             </div>
           )}
 
@@ -412,11 +407,11 @@ export const WeatherWidget: React.FC = () => {
                       <Info size={64} />
                     )}
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h4 className="text-white font-bold text-3xl md:text-4xl mb-4 font-serif tracking-tight">
                       {t.weather.summary.title}
                     </h4>
-                    <p className="text-neutral-300 text-xl md:text-2xl italic leading-relaxed max-w-2xl font-light">
+                    <p className="text-neutral-300 text-xl md:text-2xl italic leading-relaxed max-w-2xl font-light break-words [overflow-wrap:anywhere]">
                       "
                       {weatherAnalysis.status === 'favorable'
                         ? t.weather.summary.favorable
@@ -427,11 +422,11 @@ export const WeatherWidget: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                <div className="text-center lg:text-right border-t lg:border-t-0 lg:border-l border-white/10 pt-12 lg:pt-0 lg:pl-20 relative z-10 w-full lg:w-auto">
+                <div className="text-center lg:text-right border-t lg:border-t-0 lg:border-l border-white/10 pt-12 lg:pt-0 lg:pl-20 relative z-10 w-full lg:w-auto min-w-0">
                   <p className="text-[10px] text-neutral-500 font-black uppercase tracking-[0.4em] mb-6">
                     {language === 'es' ? 'SÍNTESIS ESTRATÉGICA' : 'STRATEGIC SYNTHESIS'}
                   </p>
-                  <p className="text-white font-serif text-4xl md:text-5xl leading-tight drop-shadow-lg">
+                  <p className="text-white font-serif text-4xl md:text-5xl leading-tight drop-shadow-lg break-words [overflow-wrap:anywhere]">
                     {weatherAnalysis.summaryText || '--'}
                   </p>
                   <div className="mt-10 flex flex-wrap gap-5 justify-center lg:justify-end">
@@ -450,16 +445,18 @@ export const WeatherWidget: React.FC = () => {
               </div>
 
               <div className="px-6">
-                <h3 className="text-6xl sm:text-9xl font-bold text-white flex flex-wrap items-baseline font-serif tracking-tighter leading-none mb-12">
+                <h3 className="text-6xl sm:text-9xl font-bold text-white flex flex-wrap items-baseline font-serif tracking-tighter leading-none mb-12 min-w-0">
                   <MapPin className="w-16 h-16 mr-8 text-primary shrink-0 self-center" />
-                  <span className="break-words">{selectedLocation.name}</span>
-                  <span className="text-neutral-700 font-light ml-8 text-3xl sm:text-5xl">, {selectedLocation.country}</span>
+                  <span className="break-words min-w-0 [overflow-wrap:anywhere]">{selectedLocation.name}</span>
+                  <span className="text-neutral-700 font-light ml-8 text-3xl sm:text-5xl">
+                    , {selectedLocation.country}
+                  </span>
                 </h3>
 
                 <div className="flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-12">
-                  <p className="text-lg sm:text-xl text-neutral-400 flex items-center tracking-[0.3em] uppercase font-black">
-                    <Calendar className="w-8 h-8 mr-5 text-accent shrink-0" />
-                    <span className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 tracking-normal">
+                  <p className="text-lg sm:text-xl text-neutral-400 flex items-start sm:items-center gap-3 tracking-[0.15em] uppercase font-black min-w-0">
+                    <Calendar className="w-8 h-8 text-accent shrink-0" />
+                    <span className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 tracking-normal min-w-0">
                       <span className="whitespace-nowrap tabular-nums">{startDate}</span>
                       <span className="text-neutral-600">—</span>
                       <span className="whitespace-nowrap tabular-nums">{endDate}</span>
@@ -480,9 +477,9 @@ export const WeatherWidget: React.FC = () => {
                     key={idx}
                     className="bg-neutral-800/40 border border-white/10 rounded-[4rem] hover:border-primary/50 hover:bg-neutral-800/60 transition-all duration-700 flex flex-col group h-full shadow-[0_40px_100px_rgba(0,0,0,0.5)] relative overflow-visible"
                   >
-                    <div className="p-12 lg:p-14 flex flex-col h-full gap-12 relative z-10">
-                      <div className="space-y-4 border-b border-white/5 pb-10">
-                        <p className="text-[10px] text-neutral-500 font-black uppercase tracking-[0.4em]">
+                    <div className="p-12 lg:p-14 flex flex-col h-full gap-12 relative z-10 min-w-0">
+                      <div className="space-y-4 border-b border-white/5 pb-10 min-w-0">
+                        <p className="text-[10px] text-neutral-500 font-black uppercase tracking-[0.4em] break-words [overflow-wrap:anywhere]">
                           {new Date(day.date).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { weekday: 'long' })}
                         </p>
                         <h4 className="text-white font-bold text-4xl font-serif leading-none tracking-tight">
@@ -490,7 +487,7 @@ export const WeatherWidget: React.FC = () => {
                         </h4>
                       </div>
 
-                      <div className="flex items-center justify-between gap-6 py-6 min-h-[160px] overflow-visible">
+                      <div className="flex items-center justify-between gap-6 py-6 min-h-[160px] overflow-visible min-w-0">
                         <div className="shrink-0 transition-all duration-700 group-hover:scale-110 group-hover:rotate-6">
                           {renderIcon(day.condition)}
                         </div>
@@ -498,65 +495,77 @@ export const WeatherWidget: React.FC = () => {
                           <span className="text-[clamp(5rem,12vw,8rem)] font-bold text-white tracking-tighter font-serif leading-none block drop-shadow-2xl">
                             {Math.round(day.maxTemp || 0)}°
                           </span>
-                          <span className="text-[11px] text-neutral-500 font-black uppercase tracking-[0.3em] mt-4 whitespace-normal leading-tight max-w-full text-right">
+                          <span className="text-[11px] text-neutral-500 font-black uppercase tracking-[0.3em] mt-4 whitespace-normal leading-tight max-w-full text-right break-words [overflow-wrap:anywhere]">
                             {t.weather.max}
                           </span>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-8">
-                        <div className="bg-neutral-950/40 rounded-[2.5rem] p-8 flex flex-col items-center gap-4 border border-white/5 shadow-inner transition-all hover:bg-neutral-950/60">
+                      <div className="grid grid-cols-2 gap-8 min-w-0">
+                        <div className="bg-neutral-950/40 rounded-[2.5rem] p-8 flex flex-col items-center gap-4 border border-white/5 shadow-inner transition-all hover:bg-neutral-950/60 min-w-0">
                           <Thermometer className="w-6 h-6 text-neutral-600" />
-                          <span className="text-[10px] text-neutral-500 uppercase tracking-[0.3em] font-black text-center leading-none">
+                          <span className="text-[10px] text-neutral-500 uppercase tracking-[0.3em] font-black text-center leading-none break-words [overflow-wrap:anywhere]">
                             {t.weather.min}
                           </span>
                           <span className="text-2xl font-bold text-white tracking-tighter">{Math.round(day.minTemp || 0)}°</span>
                         </div>
                         <div
-                          className={`rounded-[2.5rem] p-8 flex flex-col items-center gap-4 border transition-all shadow-inner ${
+                          className={`rounded-[2.5rem] p-8 flex flex-col items-center gap-4 border transition-all shadow-inner min-w-0 ${
                             (day.rainProb || 0) > 40
                               ? 'bg-primary/20 border-primary/40'
                               : 'bg-neutral-950/40 border-white/5 hover:bg-neutral-950/60'
                           }`}
                         >
                           <CloudRain className={`w-6 h-6 ${(day.rainProb || 0) > 40 ? 'text-primary' : 'text-neutral-600'}`} />
-                          <span className="text-[10px] text-neutral-500 uppercase tracking-[0.3em] font-black text-center leading-none">
+                          <span className="text-[10px] text-neutral-500 uppercase tracking-[0.3em] font-black text-center leading-none break-words [overflow-wrap:anywhere]">
                             {t.weather.rain}
                           </span>
                           <span className="text-2xl font-bold text-white tracking-tighter">{Math.round(day.rainProb || 0)}%</span>
                         </div>
                       </div>
 
-                      <div className="space-y-10 pt-10 border-t border-white/5 mt-auto">
-                        <div className="flex flex-col gap-8">
-                          <div className="flex items-center justify-between px-2">
-                            <div className="flex items-center gap-4">
-                              <Sun className="w-6 h-6 text-orange-500/40" />
-                              <span className="text-sm text-neutral-300 font-bold tabular-nums tracking-widest">{day.sunrise}</span>
+                      <div className="space-y-10 pt-10 border-t border-white/5 mt-auto min-w-0">
+                        <div className="flex flex-col gap-8 min-w-0">
+                          <div className="flex items-center justify-between px-2 min-w-0 gap-4">
+                            <div className="flex items-center gap-4 min-w-0">
+                              <Sun className="w-6 h-6 text-orange-500/40 shrink-0" />
+                              <span className="text-sm text-neutral-300 font-bold tabular-nums tracking-widest whitespace-nowrap">
+                                {day.sunrise}
+                              </span>
                             </div>
-                            <div className="flex items-center gap-4">
-                              <span className="text-sm text-neutral-300 font-bold tabular-nums tracking-widest">{day.sunset}</span>
-                              <Cloud className="w-6 h-6 text-primary/40" />
+                            <div className="flex items-center gap-4 min-w-0">
+                              <span className="text-sm text-neutral-300 font-bold tabular-nums tracking-widest whitespace-nowrap">
+                                {day.sunset}
+                              </span>
+                              <Cloud className="w-6 h-6 text-primary/40 shrink-0" />
                             </div>
                           </div>
 
                           {day.waterTemp !== null && (
-                            <div className="flex items-center gap-8 p-8 bg-cyan-950/20 border border-cyan-500/20 rounded-[2.5rem] shadow-2xl transition-all hover:bg-cyan-950/40">
+                            <div className="flex items-center gap-8 p-8 bg-cyan-950/20 border border-cyan-500/20 rounded-[2.5rem] shadow-2xl transition-all hover:bg-cyan-950/40 min-w-0">
                               <Waves className="w-10 h-10 text-cyan-400 shrink-0" />
                               <div className="flex flex-col min-w-0">
-                                <span className="text-[10px] text-cyan-700 font-black uppercase tracking-[0.3em] leading-none mb-2">{t.weather.water}</span>
-                                <span className="text-2xl font-bold text-white tracking-tighter">{day.waterTemp}°C</span>
+                                <span className="text-[10px] text-cyan-700 font-black uppercase tracking-[0.3em] leading-none mb-2 break-words [overflow-wrap:anywhere]">
+                                  {t.weather.water}
+                                </span>
+                                <span className="text-2xl font-bold text-white tracking-tighter whitespace-nowrap">
+                                  {day.waterTemp}°C
+                                </span>
                               </div>
                             </div>
                           )}
                         </div>
 
-                        <div className="bg-neutral-950/60 p-10 rounded-[2.5rem] border border-white/5 space-y-5 shadow-inner">
-                          <div className="flex items-center gap-4">
+                        <div className="bg-neutral-950/60 p-10 rounded-[2.5rem] border border-white/5 space-y-5 shadow-inner min-w-0">
+                          <div className="flex items-center gap-4 min-w-0">
                             <Shirt className="w-6 h-6 text-accent shrink-0" />
-                            <span className="text-[10px] text-accent font-black uppercase tracking-[0.3em]">{t.weather.intel}</span>
+                            <span className="text-[10px] text-accent font-black uppercase tracking-[0.3em] break-words [overflow-wrap:anywhere]">
+                              {t.weather.intel}
+                            </span>
                           </div>
-                          <p className="text-base text-neutral-300 italic font-light leading-relaxed">{getTravelTip(day)}</p>
+                          <p className="text-base text-neutral-300 italic font-light leading-relaxed break-words [overflow-wrap:anywhere]">
+                            {getTravelTip(day)}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -566,14 +575,13 @@ export const WeatherWidget: React.FC = () => {
 
               <div className="mt-32 bg-neutral-900/60 border border-white/5 p-16 lg:p-24 rounded-[5rem] flex flex-col md:flex-row items-center gap-16 max-w-[1200px] mx-auto text-neutral-500 italic shadow-inner text-center md:text-left">
                 <Info className="w-12 h-12 shrink-0 text-primary/30" />
-                <p className="text-lg leading-relaxed font-light">{t.weather.disclaimer}</p>
+                <p className="text-lg leading-relaxed font-light break-words [overflow-wrap:anywhere]">{t.weather.disclaimer}</p>
               </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* ✅ Mobile Date Modal */}
       {dateModal && (
         <div className="fixed inset-0 z-[220] flex items-end justify-center bg-black/70 backdrop-blur-sm p-4">
           <div className="w-full max-w-md rounded-[2rem] bg-neutral-900 border border-white/10 shadow-[0_30px_120px_rgba(0,0,0,0.9)] overflow-hidden">
