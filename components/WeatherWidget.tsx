@@ -86,6 +86,47 @@ export const WeatherWidget: React.FC = () => {
     if (startDate && endDate && startDate > endDate) setEndDate(startDate);
   }, [startDate, endDate]);
 
+  const formatShortDate = (iso: string) => {
+    try {
+      return new Date(iso).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
+        day: 'numeric',
+        month: 'short',
+      });
+    } catch {
+      return iso;
+    }
+  };
+
+  // ✅ Score 0–100: convierte datos en decisión (turismo/actividades)
+  const scoreDay = (day: WeatherData) => {
+    const rain = Math.min(100, Math.max(0, day.rainProb || 0));
+    const maxT = day.maxTemp ?? 0;
+    const wind = day.windSpeed ?? 0;
+    const cond = day.condition;
+
+    let score = 100;
+
+    // lluvia pesa fuerte
+    score -= rain * 0.8;
+
+    // viento: penaliza por arriba de 15 km/h
+    score -= Math.max(0, wind - 15) * 1.4;
+
+    // confort térmico para turismo
+    if (maxT < 18) score -= (18 - maxT) * 2.2;
+    if (maxT > 32) score -= (maxT - 32) * 2.0;
+
+    // condiciones “molestas”
+    if (cond === 'thunder') score -= 18;
+    if (cond === 'snow') score -= 22;
+    if (cond === 'fog') score -= 10;
+    if (cond === 'rain' || cond === 'drizzle') score -= 8;
+
+    // clamp
+    score = Math.round(Math.min(100, Math.max(0, score)));
+    return score;
+  };
+
   const weatherAnalysis = useMemo(() => {
     if (!forecast.length) return null;
 
@@ -102,8 +143,30 @@ export const WeatherWidget: React.FC = () => {
     if (avgRain < 15) summaryText = t.weather.summary.sunnyDays;
     if (avgRain > 50) summaryText = t.weather.summary.rainyDays;
 
-    return { status, summaryText, extremeHeat, maxWind };
-  }, [forecast, t]);
+    // ✅ ranking por score
+    const scored = forecast
+      .map((d, i) => ({ day: d, idx: i, score: scoreDay(d) }))
+      .sort((a, b) => b.score - a.score);
+
+    const best = scored.slice(0, Math.min(2, scored.length));
+    const worst = [...scored].reverse().slice(0, Math.min(2, scored.length));
+
+    // “evitar” si realmente son malos; si todo es bueno, no alarmar
+    const avoid = worst.filter((x) => x.score <= 58 || (x.day.rainProb || 0) >= 60 || (x.day.windSpeed || 0) >= 35);
+
+    const tripScore = Math.round(scored.reduce((acc, x) => acc + x.score, 0) / scored.length);
+
+    return {
+      status,
+      summaryText,
+      extremeHeat,
+      maxWind,
+      scoredMap: new Map(scored.map((x) => [x.idx, x.score])),
+      bestDays: best,
+      avoidDays: avoid,
+      tripScore,
+    };
+  }, [forecast, t, language]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
@@ -242,28 +305,18 @@ export const WeatherWidget: React.FC = () => {
     setDateModal(type);
   };
 
-  // ✅ Nuevo flujo: seleccionar fecha => cierra modal (y si era salida, abre regreso automáticamente)
-  const onModalDatePicked = (val: string) => {
-    if (!dateModal) return;
-
-    if (dateModal === 'start') {
-      setStartDate(val);
-      // si no hay endDate o queda inválida, la alineamos
-      if (endDate && val > endDate) setEndDate(val);
-
-      // abre regreso automáticamente
-      window.setTimeout(() => setDateModal('end'), 150);
-      return;
-    }
-
-    if (dateModal === 'end') {
-      setEndDate(val);
-      window.setTimeout(() => setDateModal(null), 150);
-    }
+  const onModalDateChange = (val: string) => {
+    if (dateModal === 'start') setStartDate(val);
+    if (dateModal === 'end') setEndDate(val);
   };
 
   const modalValue = dateModal === 'start' ? startDate : endDate;
   const modalMin = dateModal === 'start' ? today : startDate || today;
+
+  const scoreLabel = language === 'es' ? 'Puntaje' : 'Score';
+  const bestLabel = language === 'es' ? 'Mejor ventana' : 'Best window';
+  const avoidLabel = language === 'es' ? 'Días a evitar' : 'Days to avoid';
+  const noneAvoid = language === 'es' ? 'Ninguno relevante' : 'None flagged';
 
   return (
     <>
@@ -443,6 +496,40 @@ export const WeatherWidget: React.FC = () => {
                           : t.weather.summary.variable}
                       ”
                     </p>
+
+                    {/* ✅ NUEVO: score global + ventanas accionables */}
+                    <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="bg-neutral-950/40 border border-white/10 rounded-2xl px-5 py-4 min-w-0">
+                        <div className="text-[10px] text-neutral-500 font-black uppercase tracking-[0.28em] truncate">
+                          {scoreLabel} (0–100)
+                        </div>
+                        <div className="mt-2 text-white font-serif text-3xl tabular-nums leading-none">
+                          {weatherAnalysis.tripScore}
+                        </div>
+                      </div>
+
+                      <div className="bg-neutral-950/40 border border-white/10 rounded-2xl px-5 py-4 min-w-0">
+                        <div className="text-[10px] text-neutral-500 font-black uppercase tracking-[0.28em] truncate">
+                          {bestLabel}
+                        </div>
+                        <div className="mt-2 text-neutral-200 text-sm sm:text-base font-bold truncate">
+                          {weatherAnalysis.bestDays
+                            .map((x) => formatShortDate(x.day.date))
+                            .join(' · ')}
+                        </div>
+                      </div>
+
+                      <div className="bg-neutral-950/40 border border-white/10 rounded-2xl px-5 py-4 min-w-0">
+                        <div className="text-[10px] text-neutral-500 font-black uppercase tracking-[0.28em] truncate">
+                          {avoidLabel}
+                        </div>
+                        <div className="mt-2 text-neutral-200 text-sm sm:text-base font-bold truncate">
+                          {weatherAnalysis.avoidDays.length
+                            ? weatherAnalysis.avoidDays.map((x) => formatShortDate(x.day.date)).join(' · ')
+                            : noneAvoid}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -451,7 +538,7 @@ export const WeatherWidget: React.FC = () => {
                     {language === 'es' ? 'SÍNTESIS ESTRATÉGICA' : 'STRATEGIC SYNTHESIS'}
                   </p>
 
-                  <p className="text-white font-serif leading-tight drop-shadow-lg break-words text-[clamp(1.8rem,6vw,3.2rem)]">
+                  <p className="text-white font-serif text-3xl sm:text-4xl md:text-5xl leading-tight drop-shadow-lg break-words">
                     {weatherAnalysis.summaryText || '--'}
                   </p>
 
@@ -466,6 +553,12 @@ export const WeatherWidget: React.FC = () => {
                         {t.weather.summary.windWarning}
                       </span>
                     )}
+                    {isEstimated && (
+                      <span className="text-[10px] text-primary font-black uppercase tracking-[0.18em] bg-primary/15 border border-primary/25 px-5 py-2 rounded-full shadow-lg flex items-center gap-2">
+                        <History className="w-4 h-4" />
+                        {t.weather.projection}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -475,7 +568,7 @@ export const WeatherWidget: React.FC = () => {
                 <h3 className="font-serif font-bold text-white tracking-tight leading-[0.95] flex items-start gap-4 sm:gap-6">
                   <MapPin className="w-10 h-10 sm:w-14 sm:h-14 text-primary shrink-0 mt-1" />
                   <span className="min-w-0">
-                    <span className="block break-words text-[clamp(2.6rem,10vw,5.75rem)]">
+                    <span className="block text-5xl sm:text-7xl md:text-8xl break-words [overflow-wrap:anywhere]">
                       {selectedLocation.name}
                     </span>
                     <span className="block text-xl sm:text-3xl text-neutral-600 font-light mt-2 break-words">
@@ -493,120 +586,130 @@ export const WeatherWidget: React.FC = () => {
                       <span className="tabular-nums whitespace-nowrap">{endDate}</span>
                     </div>
                   </div>
-
-                  {isEstimated && (
-                    <span className="bg-primary/20 text-primary text-[10px] px-6 py-3 rounded-full border border-primary/30 font-black uppercase tracking-[0.18em] flex items-center gap-3 shadow-2xl shadow-primary/20 w-fit">
-                      <History className="w-4 h-4" /> {t.weather.projection}
-                    </span>
-                  )}
                 </div>
               </div>
 
               {/* Daily cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8 sm:gap-10 overflow-hidden">
-                {forecast.map((day, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-neutral-800/40 border border-white/10 rounded-[3rem] sm:rounded-[4rem] hover:border-primary/50 hover:bg-neutral-800/60 transition-all duration-700 flex flex-col group h-full shadow-[0_40px_100px_rgba(0,0,0,0.45)] overflow-hidden"
-                  >
-                    <div className="p-8 sm:p-10 md:p-12 flex flex-col h-full gap-8 sm:gap-10 min-w-0">
-                      <div className="space-y-3 border-b border-white/5 pb-7 min-w-0">
-                        <p className="text-[10px] text-neutral-500 font-black uppercase tracking-[0.35em] truncate">
-                          {new Date(day.date).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { weekday: 'long' })}
-                        </p>
-                        <h4 className="text-white font-bold text-3xl sm:text-4xl font-serif leading-none tracking-tight">
-                          {new Date(day.date).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { day: 'numeric', month: 'short' })}
-                        </h4>
-                      </div>
+                {forecast.map((day, idx) => {
+                  const s = weatherAnalysis.scoredMap.get(idx) ?? scoreDay(day);
+                  const scoreTone =
+                    s >= 78 ? 'bg-green-900/20 text-green-300 border-green-500/20' :
+                    s >= 60 ? 'bg-primary/15 text-primary border-primary/25' :
+                    'bg-red-900/20 text-red-300 border-red-500/20';
 
-                      <div className="flex items-center justify-between gap-5 min-h-[132px] sm:min-h-[160px] min-w-0">
-                        <div className="shrink-0 transition-all duration-700 group-hover:scale-110 group-hover:rotate-6">
-                          {renderIcon(day.condition)}
-                        </div>
+                  return (
+                    <div
+                      key={idx}
+                      className="bg-neutral-800/40 border border-white/10 rounded-[3rem] sm:rounded-[4rem] hover:border-primary/50 hover:bg-neutral-800/60 transition-all duration-700 flex flex-col group h-full shadow-[0_40px_100px_rgba(0,0,0,0.45)] overflow-hidden"
+                    >
+                      <div className="p-8 sm:p-10 md:p-12 flex flex-col h-full gap-8 sm:gap-10 min-w-0">
+                        <div className="space-y-3 border-b border-white/5 pb-7 min-w-0">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-[10px] text-neutral-500 font-black uppercase tracking-[0.35em] truncate">
+                              {new Date(day.date).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { weekday: 'long' })}
+                            </p>
 
-                        <div className="flex flex-col items-end text-right flex-1 min-w-0">
-                          <span className="font-bold text-white tracking-tighter font-serif leading-none block drop-shadow-2xl text-[clamp(3.8rem,15vw,7rem)]">
-                            {Math.round(day.maxTemp || 0)}°
-                          </span>
-                          <span className="mt-3 text-[10px] sm:text-[11px] text-neutral-500 font-black uppercase tracking-[0.25em] sm:tracking-[0.3em] leading-tight">
-                            {t.weather.max}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-5 sm:gap-8 min-w-0">
-                        <div className="bg-neutral-950/40 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 flex flex-col items-center gap-3 border border-white/5 shadow-inner min-w-0">
-                          <Thermometer className="w-5 h-5 sm:w-6 sm:h-6 text-neutral-600" />
-                          <span className="text-[9px] sm:text-[10px] text-neutral-500 uppercase font-black text-center leading-tight tracking-[0.18em] sm:tracking-[0.25em] break-words">
-                            {t.weather.min}
-                          </span>
-                          <span className="text-xl sm:text-2xl font-bold text-white tracking-tighter tabular-nums">
-                            {Math.round(day.minTemp || 0)}°
-                          </span>
-                        </div>
-
-                        <div
-                          className={`rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 flex flex-col items-center gap-3 border shadow-inner min-w-0 ${
-                            (day.rainProb || 0) > 40
-                              ? 'bg-primary/20 border-primary/40'
-                              : 'bg-neutral-950/40 border-white/5'
-                          }`}
-                        >
-                          <CloudRain className={`w-5 h-5 sm:w-6 sm:h-6 ${(day.rainProb || 0) > 40 ? 'text-primary' : 'text-neutral-600'}`} />
-                          <span className="text-[9px] sm:text-[10px] text-neutral-500 uppercase font-black text-center leading-tight tracking-[0.18em] sm:tracking-[0.25em] break-words">
-                            {t.weather.rain}
-                          </span>
-                          <span className="text-xl sm:text-2xl font-bold text-white tracking-tighter tabular-nums">
-                            {Math.round(day.rainProb || 0)}%
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="pt-8 border-t border-white/5 mt-auto space-y-6 min-w-0">
-                        <div className="flex items-center justify-between gap-4 min-w-0">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <Sun className="w-5 h-5 text-orange-500/40 shrink-0" />
-                            <span className="text-sm text-neutral-300 font-bold tabular-nums tracking-widest truncate">
-                              {day.sunrise}
+                            {/* ✅ NUEVO: badge de score */}
+                            <span className={`shrink-0 text-[10px] font-black uppercase tracking-[0.18em] px-3 py-1.5 rounded-full border ${scoreTone}`}>
+                              {scoreLabel}: <span className="tabular-nums">{s}</span>
                             </span>
                           </div>
-                          <div className="flex items-center gap-3 min-w-0">
-                            <span className="text-sm text-neutral-300 font-bold tabular-nums tracking-widest truncate">
-                              {day.sunset}
+
+                          <h4 className="text-white font-bold text-3xl sm:text-4xl font-serif leading-none tracking-tight">
+                            {new Date(day.date).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { day: 'numeric', month: 'short' })}
+                          </h4>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-5 min-h-[132px] sm:min-h-[160px] min-w-0">
+                          <div className="shrink-0 transition-all duration-700 group-hover:scale-110 group-hover:rotate-6">
+                            {renderIcon(day.condition)}
+                          </div>
+
+                          <div className="flex flex-col items-end text-right flex-1 min-w-0">
+                            <span className="font-bold text-white tracking-tighter font-serif leading-none block drop-shadow-2xl text-[clamp(3.8rem,15vw,7rem)]">
+                              {Math.round(day.maxTemp || 0)}°
                             </span>
-                            <Cloud className="w-5 h-5 text-primary/40 shrink-0" />
+                            <span className="mt-3 text-[10px] sm:text-[11px] text-neutral-500 font-black uppercase tracking-[0.25em] sm:tracking-[0.3em] leading-tight">
+                              {t.weather.max}
+                            </span>
                           </div>
                         </div>
 
-                        {day.waterTemp !== null && (
-                          <div className="flex items-center gap-5 p-6 bg-cyan-950/20 border border-cyan-500/20 rounded-[2rem] shadow-2xl min-w-0 overflow-hidden">
-                            <Waves className="w-8 h-8 text-cyan-400 shrink-0" />
-                            <div className="min-w-0">
-                              <span className="block text-[9px] sm:text-[10px] text-cyan-700 font-black uppercase tracking-[0.25em] truncate">
-                                {t.weather.water}
-                              </span>
-                              <span className="block text-xl sm:text-2xl font-bold text-white tracking-tighter tabular-nums">
-                                {day.waterTemp}°C
+                        <div className="grid grid-cols-2 gap-5 sm:gap-8 min-w-0">
+                          <div className="bg-neutral-950/40 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 flex flex-col items-center gap-3 border border-white/5 shadow-inner min-w-0">
+                            <Thermometer className="w-5 h-5 sm:w-6 sm:h-6 text-neutral-600" />
+                            <span className="text-[9px] sm:text-[10px] text-neutral-500 uppercase font-black text-center leading-tight tracking-[0.18em] sm:tracking-[0.25em] break-words">
+                              {t.weather.min}
+                            </span>
+                            <span className="text-xl sm:text-2xl font-bold text-white tracking-tighter tabular-nums">
+                              {Math.round(day.minTemp || 0)}°
+                            </span>
+                          </div>
+
+                          <div
+                            className={`rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 flex flex-col items-center gap-3 border shadow-inner min-w-0 ${
+                              (day.rainProb || 0) > 40
+                                ? 'bg-primary/20 border-primary/40'
+                                : 'bg-neutral-950/40 border-white/5'
+                            }`}
+                          >
+                            <CloudRain className={`w-5 h-5 sm:w-6 sm:h-6 ${(day.rainProb || 0) > 40 ? 'text-primary' : 'text-neutral-600'}`} />
+                            <span className="text-[9px] sm:text-[10px] text-neutral-500 uppercase font-black text-center leading-tight tracking-[0.18em] sm:tracking-[0.25em] break-words">
+                              {t.weather.rain}
+                            </span>
+                            <span className="text-xl sm:text-2xl font-bold text-white tracking-tighter tabular-nums">
+                              {Math.round(day.rainProb || 0)}%
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="pt-8 border-t border-white/5 mt-auto space-y-6 min-w-0">
+                          <div className="flex items-center justify-between gap-4 min-w-0">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <Sun className="w-5 h-5 text-orange-500/40 shrink-0" />
+                              <span className="text-sm text-neutral-300 font-bold tabular-nums tracking-widest truncate">
+                                {day.sunrise}
                               </span>
                             </div>
+                            <div className="flex items-center gap-3 min-w-0">
+                              <span className="text-sm text-neutral-300 font-bold tabular-nums tracking-widest truncate">
+                                {day.sunset}
+                              </span>
+                              <Cloud className="w-5 h-5 text-primary/40 shrink-0" />
+                            </div>
                           </div>
-                        )}
 
-                        <div className="bg-neutral-950/60 p-7 sm:p-9 rounded-[2rem] border border-white/5 space-y-3 shadow-inner min-w-0 overflow-hidden">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <Shirt className="w-5 h-5 text-accent shrink-0" />
-                            <span className="text-[9px] sm:text-[10px] text-accent font-black uppercase tracking-[0.22em] truncate">
-                              {t.weather.intel}
-                            </span>
+                          {day.waterTemp !== null && (
+                            <div className="flex items-center gap-5 p-6 bg-cyan-950/20 border border-cyan-500/20 rounded-[2rem] shadow-2xl min-w-0 overflow-hidden">
+                              <Waves className="w-8 h-8 text-cyan-400 shrink-0" />
+                              <div className="min-w-0">
+                                <span className="block text-[9px] sm:text-[10px] text-cyan-700 font-black uppercase tracking-[0.25em] truncate">
+                                  {t.weather.water}
+                                </span>
+                                <span className="block text-xl sm:text-2xl font-bold text-white tracking-tighter tabular-nums">
+                                  {day.waterTemp}°C
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="bg-neutral-950/60 p-7 sm:p-9 rounded-[2rem] border border-white/5 space-y-3 shadow-inner min-w-0 overflow-hidden">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <Shirt className="w-5 h-5 text-accent shrink-0" />
+                              <span className="text-[9px] sm:text-[10px] text-accent font-black uppercase tracking-[0.22em] truncate">
+                                {t.weather.intel}
+                              </span>
+                            </div>
+                            <p className="text-sm sm:text-base text-neutral-300 italic font-light leading-relaxed break-words [overflow-wrap:anywhere]">
+                              {getTravelTip(day)}
+                            </p>
                           </div>
-                          <p className="text-sm sm:text-base text-neutral-300 italic font-light leading-relaxed break-words">
-                            {getTravelTip(day)}
-                          </p>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="bg-neutral-900/60 border border-white/5 p-10 sm:p-14 rounded-[3rem] sm:rounded-[5rem] flex flex-col md:flex-row items-start md:items-center gap-8 max-w-[1200px] mx-auto text-neutral-500 italic shadow-inner overflow-hidden">
@@ -618,10 +721,10 @@ export const WeatherWidget: React.FC = () => {
         </div>
       </div>
 
-      {/* ✅ Mobile Date Modal (sin OK, sin “salirse”) */}
+      {/* Mobile Date Modal */}
       {dateModal && (
-        <div className="fixed inset-0 z-[220] flex items-end justify-center bg-black/80 p-4 overflow-hidden">
-          <div className="w-full max-w-[calc(100vw-2rem)] sm:max-w-md mx-auto box-border rounded-[2rem] bg-neutral-900 border border-white/10 shadow-[0_30px_120px_rgba(0,0,0,0.9)] overflow-hidden">
+        <div className="fixed inset-0 z-[220] flex items-end justify-center bg-black/80 p-4">
+          <div className="w-full max-w-[min(28rem,calc(100vw-2rem))] rounded-[2rem] bg-neutral-900 border border-white/10 shadow-[0_30px_120px_rgba(0,0,0,0.9)] overflow-hidden">
             <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
               <div className="text-white font-bold tracking-tight">
                 {dateModal === 'start' ? t.weather.startDate : t.weather.endDate}
@@ -636,21 +739,22 @@ export const WeatherWidget: React.FC = () => {
               </button>
             </div>
 
-            <div className="p-6 pb-[calc(1.25rem+var(--safe-bottom))]">
+            <div className="p-6 pb-[calc(1.5rem+var(--safe-bottom))] space-y-4">
               <input
                 type="date"
-                className="w-full box-border px-6 py-5 bg-neutral-950/60 text-white rounded-2xl focus:ring-2 focus:ring-primary/50 outline-none border border-white/10 transition-all font-medium [color-scheme:dark] text-base"
+                className="w-full px-6 py-5 bg-neutral-950/60 text-white rounded-2xl focus:ring-2 focus:ring-primary/50 outline-none border border-white/10 transition-all font-medium [color-scheme:dark] text-base"
                 value={modalValue}
                 min={modalMin}
-                onChange={(e) => onModalDatePicked(e.target.value)}
+                onChange={(e) => onModalDateChange(e.target.value)}
               />
 
-              {/* Tip sutil para el usuario */}
-              <p className="mt-4 text-[11px] text-neutral-500 font-bold uppercase tracking-[0.22em]">
-                {dateModal === 'start'
-                  ? (language === 'es' ? 'Al elegir salida, se abre regreso.' : 'Selecting start opens end date.')
-                  : (language === 'es' ? 'Listo. Ya puedes consultar.' : 'Done. You can search now.')}
-              </p>
+              <button
+                type="button"
+                onClick={() => setDateModal(null)}
+                className="w-full bg-accent hover:bg-accent-hover text-white py-4 rounded-2xl font-black uppercase tracking-[0.25em] text-xs border border-accent/20 active:scale-95 transition"
+              >
+                OK
+              </button>
             </div>
           </div>
         </div>
