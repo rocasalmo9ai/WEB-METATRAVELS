@@ -47,3 +47,7 @@ const App: React.FC = () => {
 };
 
 export default App;
+import { ThankYou } from './pages/ThankYou';
+
+// dentro de <Routes>
+<Route path="/gracias" element={<ThankYou />} />
