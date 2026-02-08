@@ -305,9 +305,36 @@ export const WeatherWidget: React.FC = () => {
     setDateModal(type);
   };
 
+  /**
+   * Mobile modal date behavior:
+   * - selecting START auto-advances to END (no OK)
+   * - selecting END closes modal (no OK)
+   * Keep both fields visible so user can reopen either side.
+   */
   const onModalDateChange = (val: string) => {
-    if (dateModal === 'start') setStartDate(val);
-    if (dateModal === 'end') setEndDate(val);
+    setError('');
+
+    if (dateModal === 'start') {
+      setStartDate(val);
+
+      // If endDate is empty or behind start, align it to avoid invalid range
+      if (!endDate || (val && endDate && val > endDate)) {
+        setEndDate(val);
+      }
+
+      // Auto-advance to end date selection (no OK needed)
+      // setTimeout avoids iOS input quirks with immediate modal switch
+      setTimeout(() => setDateModal('end'), 0);
+      return;
+    }
+
+    if (dateModal === 'end') {
+      setEndDate(val);
+
+      // Close immediately after selecting end date (no OK needed)
+      setTimeout(() => setDateModal(null), 0);
+      return;
+    }
   };
 
   const modalValue = dateModal === 'start' ? startDate : endDate;
@@ -513,9 +540,7 @@ export const WeatherWidget: React.FC = () => {
                           {bestLabel}
                         </div>
                         <div className="mt-2 text-neutral-200 text-sm sm:text-base font-bold truncate">
-                          {weatherAnalysis.bestDays
-                            .map((x) => formatShortDate(x.day.date))
-                            .join(' · ')}
+                          {weatherAnalysis.bestDays.map((x) => formatShortDate(x.day.date)).join(' · ')}
                         </div>
                       </div>
 
@@ -568,10 +593,11 @@ export const WeatherWidget: React.FC = () => {
                 <h3 className="font-serif font-bold text-white tracking-tight leading-[0.95] flex items-start gap-4 sm:gap-6">
                   <MapPin className="w-10 h-10 sm:w-14 sm:h-14 text-primary shrink-0 mt-1" />
                   <span className="min-w-0">
-                    <span className="block text-5xl sm:text-7xl md:text-8xl break-words [overflow-wrap:anywhere]">
+                    {/* FIX: evita cortar palabras a la mitad (quitamos overflow-wrap:anywhere) */}
+                    <span className="block text-5xl sm:text-7xl md:text-8xl break-normal whitespace-normal hyphens-none">
                       {selectedLocation.name}
                     </span>
-                    <span className="block text-xl sm:text-3xl text-neutral-600 font-light mt-2 break-words">
+                    <span className="block text-xl sm:text-3xl text-neutral-600 font-light mt-2 break-normal whitespace-normal hyphens-none">
                       {selectedLocation.country}
                     </span>
                   </span>
@@ -594,9 +620,11 @@ export const WeatherWidget: React.FC = () => {
                 {forecast.map((day, idx) => {
                   const s = weatherAnalysis.scoredMap.get(idx) ?? scoreDay(day);
                   const scoreTone =
-                    s >= 78 ? 'bg-green-900/20 text-green-300 border-green-500/20' :
-                    s >= 60 ? 'bg-primary/15 text-primary border-primary/25' :
-                    'bg-red-900/20 text-red-300 border-red-500/20';
+                    s >= 78
+                      ? 'bg-green-900/20 text-green-300 border-green-500/20'
+                      : s >= 60
+                        ? 'bg-primary/15 text-primary border-primary/25'
+                        : 'bg-red-900/20 text-red-300 border-red-500/20';
 
                   return (
                     <div
@@ -611,7 +639,9 @@ export const WeatherWidget: React.FC = () => {
                             </p>
 
                             {/* ✅ NUEVO: badge de score */}
-                            <span className={`shrink-0 text-[10px] font-black uppercase tracking-[0.18em] px-3 py-1.5 rounded-full border ${scoreTone}`}>
+                            <span
+                              className={`shrink-0 text-[10px] font-black uppercase tracking-[0.18em] px-3 py-1.5 rounded-full border ${scoreTone}`}
+                            >
                               {scoreLabel}: <span className="tabular-nums">{s}</span>
                             </span>
                           </div>
@@ -649,9 +679,7 @@ export const WeatherWidget: React.FC = () => {
 
                           <div
                             className={`rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 flex flex-col items-center gap-3 border shadow-inner min-w-0 ${
-                              (day.rainProb || 0) > 40
-                                ? 'bg-primary/20 border-primary/40'
-                                : 'bg-neutral-950/40 border-white/5'
+                              (day.rainProb || 0) > 40 ? 'bg-primary/20 border-primary/40' : 'bg-neutral-950/40 border-white/5'
                             }`}
                           >
                             <CloudRain className={`w-5 h-5 sm:w-6 sm:h-6 ${(day.rainProb || 0) > 40 ? 'text-primary' : 'text-neutral-600'}`} />
@@ -748,13 +776,14 @@ export const WeatherWidget: React.FC = () => {
                 onChange={(e) => onModalDateChange(e.target.value)}
               />
 
-              <button
-                type="button"
-                onClick={() => setDateModal(null)}
-                className="w-full bg-accent hover:bg-accent-hover text-white py-4 rounded-2xl font-black uppercase tracking-[0.25em] text-xs border border-accent/20 active:scale-95 transition"
-              >
-                OK
-              </button>
+              {/* FIX: quitamos OK para evitar doble confirmación en iPhone.
+                  - start: auto-advances a end
+                  - end: auto-cierra modal */}
+              <div className="text-[11px] text-neutral-500 font-medium leading-relaxed">
+                {dateModal === 'start'
+                  ? (language === 'es' ? 'Elige salida y pasaremos a regreso.' : 'Pick start date, then we’ll ask for end date.')
+                  : (language === 'es' ? 'Elige regreso y cerraremos automáticamente.' : 'Pick end date and we’ll close automatically.')}
+              </div>
             </div>
           </div>
         </div>
