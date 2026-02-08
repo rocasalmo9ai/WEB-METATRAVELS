@@ -1,6 +1,13 @@
 /* Base reset */
 * { box-sizing: border-box; }
-html, body { height: 100%; }
+
+html, body {
+  height: 100%;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   background: #0b0d10; /* negro elegante */
@@ -9,4 +16,25 @@ body {
 }
 
 /* Prevent layout overflow issues */
-img, video { max-width: 100%; height: auto; }
+img, video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* iOS: reduce zoom y bugs de layout con inputs */
+input, select, textarea {
+  font-size: 16px;
+}
+
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-top {
+  padding-top: calc(var(--safe-top) + 12px);
+}
+
+.safe-bottom {
+  padding-bottom: calc(var(--safe-bottom) + 20px);
+}
