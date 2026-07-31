@@ -1,31 +1,41 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
+import { Layout } from './components/Layout';
+import { LanguageProvider } from './components/LanguageContext';
 import { Home } from './pages/Home';
 import { PackagesList } from './pages/PackagesList';
 import { PackageDetail } from './pages/PackageDetail';
+import { CustomTrip } from './pages/CustomTrip';
 import { Questionnaire } from './pages/Questionnaire';
 import { ThankYou } from './pages/ThankYou';
+import { WeatherPage } from './pages/WeatherPage';
+import { About } from './pages/About';
+import { Contact } from './pages/Contact';
 
 export const App: React.FC = () => {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
+      <LanguageProvider>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Home />} />
 
-        {/* Packages */}
-        <Route path="/packages" element={<PackagesList />} />
-        <Route path="/packages/:id" element={<PackageDetail />} />
+            <Route path="/packages" element={<PackagesList />} />
+            <Route path="/package/:id" element={<PackageDetail />} />
+            <Route path="/packages/:id" element={<PackageDetail />} />
 
-        {/* Questionnaire */}
-        <Route path="/questionnaire" element={<Questionnaire />} />
+            <Route path="/custom-trip" element={<CustomTrip />} />
+            <Route path="/questionnaire" element={<Questionnaire />} />
+            <Route path="/weather" element={<WeatherPage />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/gracias" element={<ThankYou />} />
 
-        {/* Thank you */}
-        <Route path="/gracias" element={<ThankYou />} />
-
-        {/* Fallback */}
-        <Route path="*" element={<Home />} />
-      </Routes>
+            <Route path="*" element={<Home />} />
+          </Routes>
+        </Layout>
+      </LanguageProvider>
     </Router>
   );
 };
