@@ -10,9 +10,9 @@ html, body {
 
 body {
   margin: 0;
-  background: #0b0d10; /* negro elegante */
-  color: #ffffff;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: #0c0c0d;
+  color: #f4efe7;
+  font-family: "DM Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
 
 /* Prevent layout overflow issues */
@@ -29,6 +29,10 @@ input, select, textarea {
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --ink: #0c0c0d;
+  --surface: #171719;
+  --ivory: #f4efe7;
+  --gold: #b8873d;
 }
 
 .safe-top {

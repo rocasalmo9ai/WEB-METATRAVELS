@@ -51,15 +51,15 @@ export const PackagesList: React.FC = () => {
   }, [filter]);
 
   const AmenitiesRow = ({ pkg }: { pkg: Package }) => (
-    <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-gray-100">
-      {pkg.amenities.flightsIntl && <Globe size={16} className="text-gray-400" />}
-      {pkg.amenities.flightsDomestic && <Plane size={16} className="text-gray-400" />}
-      {pkg.amenities.accommodation && <Hotel size={16} className="text-gray-400" />}
-      {pkg.amenities.meals && <Utensils size={16} className="text-gray-400" />}
-      {pkg.amenities.tours && <Map size={16} className="text-gray-400" />}
-      {pkg.amenities.guide && <User size={16} className="text-gray-400" />}
-      {pkg.amenities.tips && <Coins size={16} className="text-gray-400" />}
-      {pkg.amenities.taxes && <TicketCheck size={16} className="text-gray-400" />}
+    <div className="flex flex-wrap gap-3 mt-5 pt-5 border-t border-[#36332d]">
+      {pkg.amenities.flightsIntl && <Globe size={16} className="text-[#b8873d]" />}
+      {pkg.amenities.flightsDomestic && <Plane size={16} className="text-[#b8873d]" />}
+      {pkg.amenities.accommodation && <Hotel size={16} className="text-[#b8873d]" />}
+      {pkg.amenities.meals && <Utensils size={16} className="text-[#b8873d]" />}
+      {pkg.amenities.tours && <Map size={16} className="text-[#b8873d]" />}
+      {pkg.amenities.guide && <User size={16} className="text-[#b8873d]" />}
+      {pkg.amenities.tips && <Coins size={16} className="text-[#b8873d]" />}
+      {pkg.amenities.taxes && <TicketCheck size={16} className="text-[#b8873d]" />}
     </div>
   );
 
@@ -73,14 +73,15 @@ export const PackagesList: React.FC = () => {
   ];
 
   return (
-    <div className="bg-gray-50 min-h-screen pt-32 md:pt-48 pb-24">
+    <div className="min-h-screen bg-[#0c0c0d] pt-32 md:pt-48 pb-24 text-[#f4efe7]">
       <div className="container mx-auto px-6">
         {/* Título */}
         <div className="text-center mb-16">
-          <h1 className="text-5xl md:text-6xl font-serif font-bold text-gray-900 mb-6">
+          <p className="mb-4 text-xs font-bold uppercase tracking-[0.35em] text-[#b8873d]">Viajes diseñados a tu medida</p>
+          <h1 className="text-5xl md:text-6xl font-serif font-bold text-[#f4efe7] mb-6">
             {t.nav.destinations}
           </h1>
-          <p className="text-xl text-gray-500 max-w-2xl mx-auto">
+          <p className="text-xl text-[#c9c1b5] max-w-2xl mx-auto">
             {t.home.featuredPackages}
           </p>
         </div>
@@ -98,9 +99,9 @@ export const PackagesList: React.FC = () => {
                   'px-8 py-3 rounded-full text-xs font-bold uppercase tracking-widest border transition-all',
                   isActive
                     // 👇 ACTIVO: oscuro + texto blanco (NO se pierde jamás)
-                    ? 'bg-neutral-900 border-neutral-900 text-white shadow-lg scale-105'
+                    ? 'bg-[#b8873d] border-[#b8873d] text-[#0c0c0d] shadow-lg scale-105'
                     // 👇 INACTIVO
-                    : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-100',
+                    : 'bg-transparent border-[#5b554b] text-[#f4efe7] hover:border-[#b8873d] hover:text-[#b8873d]',
                 ].join(' ')}
               >
                 {f.label}
@@ -112,34 +113,35 @@ export const PackagesList: React.FC = () => {
         {/* GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
           {filteredPackages.map((pkg) => (
-            <Link to={`/package/${pkg.id}`} key={pkg.id} className="group block">
-              <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-xl border border-gray-100 flex flex-col h-full">
+            <Link to={`/package/${pkg.id.replace(/-dup-\d+$/, '')}`} key={pkg.id} className="group block">
+              <div className="overflow-hidden border border-[#36332d] bg-[#171719] flex flex-col h-full transition duration-500 group-hover:-translate-y-2 group-hover:border-[#b8873d]">
                 <div className="relative aspect-[4/3]">
                   <img
                     src={pkg.heroImage}
                     alt={getText(pkg.title)}
                     className="w-full h-full object-cover"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c0d]/70 via-transparent to-transparent" />
                 </div>
 
                 <div className="p-8 flex flex-col flex-grow">
-                  <p className="text-xs uppercase tracking-widest text-gray-400 mb-2">
+                  <p className="text-xs uppercase tracking-widest text-[#b8873d] mb-3">
                     {getText(pkg.destination)}
                   </p>
 
-                  <h3 className="text-2xl font-serif font-bold text-gray-900 mb-4">
+                  <h3 className="text-2xl font-serif font-bold text-[#f4efe7] mb-4">
                     {getText(pkg.title)}
                   </h3>
 
-                  <div className="flex items-center text-xs text-gray-500 mb-6">
+                  <div className="flex items-center text-xs text-[#c9c1b5] mb-6">
                     <Calendar size={14} className="mr-2" />
                     {getText(pkg.dates)}
                   </div>
 
                   <div className="flex-grow">
                     {pkg.highlights.slice(0, 2).map((h, i) => (
-                      <div key={i} className="flex text-sm text-gray-600 mb-2">
-                        <CheckCircle2 size={14} className="mr-2 text-green-600" />
+                      <div key={i} className="flex text-sm text-[#ded7cc] mb-2">
+                        <CheckCircle2 size={14} className="mr-2 text-[#b8873d]" />
                         {getText(h)}
                       </div>
                     ))}
@@ -147,16 +149,16 @@ export const PackagesList: React.FC = () => {
 
                   <AmenitiesRow pkg={pkg} />
 
-                  <div className="mt-6 flex justify-between items-center border-t pt-4">
+                  <div className="mt-6 flex justify-between items-center pt-4">
                     <div>
-                      <p className="text-xs text-gray-400 uppercase">
+                      <p className="text-xs text-[#a69d90] uppercase">
                         {t.common.perPerson}
                       </p>
-                      <p className="text-2xl font-bold text-gray-900">
+                      <p className="text-2xl font-bold text-[#f4efe7]">
                         ${pkg.price.toLocaleString()}
                       </p>
                     </div>
-                    <ArrowRight className="text-gray-400 group-hover:text-black transition-colors" />
+                    <ArrowRight className="text-[#b8873d] transition-transform group-hover:translate-x-2" />
                   </div>
                 </div>
               </div>
@@ -166,8 +168,8 @@ export const PackagesList: React.FC = () => {
 
         {filteredPackages.length === 0 && (
           <div className="text-center py-40">
-            <Search size={40} className="mx-auto text-gray-300 mb-6" />
-            <h3 className="text-2xl font-serif text-gray-800">
+            <Search size={40} className="mx-auto text-[#b8873d] mb-6" />
+            <h3 className="text-2xl font-serif text-[#f4efe7]">
               No se encontraron viajes
             </h3>
           </div>

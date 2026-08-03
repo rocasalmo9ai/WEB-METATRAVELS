@@ -6,10 +6,28 @@
     <title>Meta Travels | Luxury Bespoke Journeys</title>
     <meta name="description" content="Meta Travels: El epítome del lujo y la aventura a medida.">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#b8873d',
+              'primary-dark': '#8f672d',
+              accent: '#d9ad62',
+              'accent-hover': '#edc57f',
+            },
+            fontFamily: {
+              sans: ['DM Sans', 'sans-serif'],
+              serif: ['Playfair Display', 'serif'],
+            },
+          },
+        },
+      };
+    </script>
     <style>
-      body { font-family: 'Inter', sans-serif; background-color: #0b0e14; color: #f8fafc; margin: 0; }
-      .text-gradient { background: linear-gradient(to right, #ffffff, #8B5CF6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+      body { font-family: 'DM Sans', sans-serif; background-color: #0c0c0d; color: #f4efe7; margin: 0; }
+      .text-gradient { background: linear-gradient(to right, #fffaf0, #d9ad62); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     </style>
   <script type="importmap">
 {
